@@ -5,6 +5,7 @@ package com.moscona.util;
  * By: Arnon Moscona
  */
 public class ExceptionHelper {
+    @SuppressWarnings("unchecked")
     public static Throwable fishOutOf(Throwable exception, Class typeToFishOut, int maxCauseDepth) {
         if (maxCauseDepth<0) {
             return null;
