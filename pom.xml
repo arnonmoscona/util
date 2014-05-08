@@ -12,7 +12,8 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <groovy.version>2.3.0</groovy.version>  <!-- Amir's groovy version was 2.0.0-beta-1 -->
+        <groovy.version>2.3.0</groovy.version>
+        <!-- Amir's groovy version was 2.0.0-beta-1 -->
         <groovy.gmaven.plugin>${groovy.version}</groovy.gmaven.plugin>
         <groovy.easyb.plugin.version>${groovy.version}</groovy.easyb.plugin.version>
         <easyb.include>*Story.story</easyb.include>
@@ -47,11 +48,41 @@
             <version>1.1.5</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.google.code</groupId>
+            <artifactId>jconch</artifactId>
+            <version>1.3</version>
+
+            <!-- Took 1.3 from repository smokejumperit-->
+            <scope>compile</scope>
+            <optional>true</optional>
+            <exclusions>
+                <exclusion> <!-- This was including groovy 1.7.0, preventing it -->
+                    <groupId>org.codehaus.groovy</groupId>
+                    <artifactId>groovy</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.google.collections</groupId>
+                    <artifactId>google-collections</artifactId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>commons-lang</artifactId>
+                    <groupId>commons-lang</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
 
         <dependency>  <!-- this came from the intellitrade build file, constructed by Amir Gur -->
             <groupId>org.codehaus.groovy</groupId>
             <artifactId>groovy-all</artifactId>
-            <version>2.3.0</version>  <!-- Amir's groovy version was 2.0.0-beta-1 -->
+            <version>2.3.0</version>
+            <!-- Amir's groovy version was 2.0.0-beta-1 -->
+        </dependency>
+
+        <dependency>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
+            <version>3.2.1</version>
         </dependency>
 
         <dependency>  <!-- this came from the intellitrade build file, constructed by Amir Gur -->
@@ -72,7 +103,6 @@
                 was needed as non-test to allow keeping com.intellitrade.test.easyb.TestHelper under server/src
                 It will move to a test area and this can be re-added later -->
         </dependency>
-
 
 
         <dependency>
@@ -121,7 +151,7 @@
                 </configuration>
             </plugin>
 
-        <!-- the following came from the intellitrade build file, constructed by Amir Gur -->
+            <!-- the following came from the intellitrade build file, constructed by Amir Gur -->
             <!--
               Got ideas from:
               http://docs.codehaus.org/display/GMAVEN/Building+Groovy+Projects
@@ -192,4 +222,23 @@
             </plugin>
         </plugins>
     </build>
+
+    <repositories>
+        <repository>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <id>central</id>
+            <name>Maven Repository Switchboard</name>
+            <url>http://repo1.maven.org/maven2</url>
+        </repository>
+        <repository> <!-- Used for jconch -->
+            <id>smokejumperit</id>
+            <url>http://repo.smokejumperit.com</url>
+        </repository>
+        <repository>
+            <id>spock.snapshots</id>
+            <url>http://m2repo.spockframework.org/snapshots</url>
+        </repository>
+    </repositories>
 </project>
