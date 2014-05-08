@@ -12,7 +12,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <groovy.version>2.1.0</groovy.version>  <!-- Amir's groovy version was 2.0.0-beta-1 -->
+        <groovy.version>2.3.0</groovy.version>  <!-- Amir's groovy version was 2.0.0-beta-1 -->
         <groovy.gmaven.plugin>${groovy.version}</groovy.gmaven.plugin>
         <groovy.easyb.plugin.version>${groovy.version}</groovy.easyb.plugin.version>
         <easyb.include>*Story.story</easyb.include>
@@ -51,7 +51,7 @@
         <dependency>  <!-- this came from the intellitrade build file, constructed by Amir Gur -->
             <groupId>org.codehaus.groovy</groupId>
             <artifactId>groovy-all</artifactId>
-            <version>2.1.0</version>  <!-- Amir's groovy version was 2.0.0-beta-1 -->
+            <version>2.3.0</version>  <!-- Amir's groovy version was 2.0.0-beta-1 -->
         </dependency>
 
         <dependency>  <!-- this came from the intellitrade build file, constructed by Amir Gur -->
@@ -80,11 +80,32 @@
             <artifactId>commons-lang3</artifactId>
             <version>3.2.1</version>
         </dependency>
+
         <dependency>
             <groupId>commons-beanutils</groupId>
             <artifactId>commons-beanutils</artifactId>
             <version>1.8.3</version>
         </dependency>
+
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.sf.opencsv</groupId>
+            <artifactId>opencsv</artifactId>
+            <version>2.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>14.0.1</version>
+        </dependency>
+
+
     </dependencies>
 
 
