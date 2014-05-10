@@ -1,4 +1,4 @@
-package com.moscona.async;
+package com.moscona.util.async;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;

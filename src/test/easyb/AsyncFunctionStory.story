@@ -2,8 +2,8 @@ description "support for making synchronous calls with a return value over an as
 
 import static com.moscona.test.easyb.TestHelper.*
 
-import com.moscona.async.AsyncFunctionCall
-import com.moscona.async.AsyncFunctionFutureResults
+import com.moscona.util.async.AsyncFunctionCall
+import com.moscona.util.async.AsyncFunctionFutureResults
 import jconch.testing.TestCoordinator
 
 import java.util.concurrent.TimeUnit

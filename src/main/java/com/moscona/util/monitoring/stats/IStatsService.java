@@ -1,4 +1,4 @@
-package com.moscona.util;
+package com.moscona.util.monitoring.stats;
 
 import com.moscona.exceptions.InvalidStateException;
 
@@ -12,7 +12,7 @@ import java.util.Set;
 public interface IStatsService {
     /**
      * Stops the service, preventing further stats collection (data is not lost).
-     * The main reason to turn it off is performance. But this also allows temporary shut-offs when you want to do
+     * The main reason to turn it off is monitoring. But this also allows temporary shut-offs when you want to do
      * untracked activity.
      */
     public void turnOff();

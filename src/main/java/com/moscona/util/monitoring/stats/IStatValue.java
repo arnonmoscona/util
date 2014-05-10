@@ -1,4 +1,4 @@
-package com.moscona.util;
+package com.moscona.util.monitoring.stats;
 
 import com.moscona.util.ISimpleDescriptiveStatistic;
 

@@ -1,7 +1,7 @@
-package com.moscona.async;
+package com.moscona.util.async;
 
 import com.moscona.exceptions.InvalidStateException;
-import com.moscona.util.IStatsService;
+import com.moscona.util.monitoring.stats.IStatsService;
 
 import java.util.concurrent.ConcurrentHashMap;
 

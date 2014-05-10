@@ -1,7 +1,7 @@
-package com.moscona.async;
+package com.moscona.util.async;
 
 import com.moscona.exceptions.InvalidStateException;
-import com.moscona.util.IStatsService;
+import com.moscona.util.monitoring.stats.IStatsService;
 
 /**
  * Created: 8/14/11 1:14 PM By: Arnon Moscona
