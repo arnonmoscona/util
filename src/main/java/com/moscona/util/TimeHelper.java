@@ -495,7 +495,7 @@ public class TimeHelper {
         private static Map<String, DateTimeFormatter> parsers = new HashMap<String, DateTimeFormatter>();
 
     */
-    public static Calendar parse(String timestampString, String dateDelimiter) throws InvalidArgumentException {
+    public static Calendar parse(String timestampString, String dateDelimiter) throws InvalidArgumentException { // FIXME this is iqfeed specific
         if (timestampString==null) {
             return null;
         }
