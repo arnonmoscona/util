@@ -7,8 +7,28 @@
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>util</name>
-    <url>http://maven.apache.org</url>
+    <name>com.moscona.common.util</name>
+    <url>https://github.com/arnonmoscona/util</url>
+    <description>
+        Base utility classes for com.moscona - anything that does not yet fit neatly into its own project (too small)
+    </description>
+    <licenses><license>
+        <name>Apache Licence Version 2.0</name>
+        <url>http://www.apache.org/licenses/LICENSE-2.0</url>
+    </license></licenses>
+    <developers>
+        <developer>
+            <name>Arnon Moscona</name>
+            <url>https://github.com/arnonmoscona</url>
+            <id>arnonmoscona</id>
+        </developer>
+    </developers>
+    <scm>
+        <url>scm:git:git@github.com:arnonmoscona/util.git</url>
+    </scm>
+    <issueManagement>
+        <url>http://moscona.myjetbrains.com/youtrack/issues/UT</url>
+    </issueManagement>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
