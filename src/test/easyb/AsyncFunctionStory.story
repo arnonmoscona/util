@@ -4,7 +4,7 @@ import static com.moscona.test.easyb.TestHelper.*
 
 import com.moscona.util.async.AsyncFunctionCall
 import com.moscona.util.async.AsyncFunctionFutureResults
-import jconch.testing.TestCoordinator
+import com.moscona.util.testing.TestCoordinator
 
 import java.util.concurrent.TimeUnit
 
