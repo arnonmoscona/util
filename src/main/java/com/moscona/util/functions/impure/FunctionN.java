@@ -5,6 +5,5 @@ package com.moscona.util.functions.impure;
  */
 @FunctionalInterface
 public interface FunctionN<R> extends ImpureFunction {
-    @FunctionalInterface
-public R call(Object... args) throws Exception;
+    R call(Object... args) throws Exception;
 }

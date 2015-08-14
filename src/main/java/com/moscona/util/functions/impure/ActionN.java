@@ -5,6 +5,5 @@ package com.moscona.util.functions.impure;
  */
 @FunctionalInterface
 public interface ActionN extends ImpureAction {
-    @FunctionalInterface
-public void call(Object... args) throws Exception;
+    void call(Object... args) throws Exception;
 }
