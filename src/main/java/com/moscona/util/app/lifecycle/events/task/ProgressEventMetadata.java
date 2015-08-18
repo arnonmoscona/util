@@ -49,9 +49,9 @@ public class ProgressEventMetadata {
 
     /**
      *
-     * @param eventMetaData
-     * @throws InvalidArgumentException
-     * @throws NumberFormatException
+     * @param eventMetaData data about the event. Allows tagging and facilitates more usable UI
+     * @throws InvalidArgumentException bad parameters
+     * @throws NumberFormatException what it says
      */
     public ProgressEventMetadata(Map<String, Object> eventMetaData) throws InvalidArgumentException, NumberFormatException {
         this(eventMetaData.get(TASK_NAME).toString(),

@@ -71,9 +71,9 @@ public class StringHelper {
     }
 
     /**
-     * A generic toString() method for any object. Uses BeanUtils. No guarantees.
-     * @param bean
-     * @return
+     * A generic toString() method for any object. Uses BeanUtils. No guarantees. Consider Lombok instead
+     * @param bean the object to make a String for
+     * @return whatever it comes up with...
      */
     public static String toString(Object bean) {
         try {

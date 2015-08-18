@@ -56,7 +56,7 @@ public class StackTraceHelper {
 
     /**
      * A variant that allows the caller to specify a list of substrings to exclude in filtered stack trace dumps
-     * @param substrings
+     * @param substrings list of substrings to exclude
      * @return the static instance of StackTraceHelper, with the new filter substring list
      */
     public static synchronized StackTraceHelper instance(String... substrings) {
@@ -102,8 +102,8 @@ public class StackTraceHelper {
 
     /**
      * Prints a stack trace that only includes intellitrade stack trace elements
-     * @param thread
-     * @param out
+     * @param thread the thread for which to dump the stack trace
+     * @param out the PrintStream to which the output goes
      */
     public void dumpFilteredStackTrace(Thread thread, PrintStream out) {
         out.println("\nThread dump for thread #"+thread.getId()+": "+thread);

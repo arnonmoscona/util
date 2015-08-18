@@ -41,7 +41,7 @@ public abstract class AsyncFunctionCall<V> {
     /**
      * Associates a results store with this call. Useful for factory methods to make method calls.
      *
-     * @param resultsStore
+     * @param resultsStore where to store results
      * @return this
      */
     public AsyncFunctionCall<V> use(AsyncFunctionFutureResults<V> resultsStore) {
@@ -54,7 +54,7 @@ public abstract class AsyncFunctionCall<V> {
      * This method is used by the asynchronous call to set the return value and make sure that all the callers are
      * notified that the operation is complete.
      *
-     * @param result
+     * @param result the return vale that the caller should get
      */
     public void returnToCallers(V result) {
         resultsStore.returnToCallers(computeArgumentsSignature(), result);
@@ -62,6 +62,8 @@ public abstract class AsyncFunctionCall<V> {
 
     /**
      * For testability
+     * @throws ExecutionException from the used Future
+     * @throws InterruptedException if thread is interrupted
      */
     public void awaitReturn() throws ExecutionException, InterruptedException {
         if (future.isDone()) {
@@ -75,6 +77,7 @@ public abstract class AsyncFunctionCall<V> {
      * performs a blocking synchronous call by invoking the async call and waiting for its completion Semantics are like
      * a java.util.concurrent.Future.get() except that any exception can be thrown.
      *
+     * @param results the results store to use
      * @return computed result. Note that this is obtained via a shared Future, and therefore should be considered
      * immutable. It is not safe to call mutating methods on the return value as multiple concurrent calls with the same
      * signature will share the same return value.
@@ -119,14 +122,15 @@ public abstract class AsyncFunctionCall<V> {
      * Performs a blocking synchronous call by invoking the async call and waiting for its completion with a timeout.
      * Semantics are like a java.util.concurrent.Future.get(timeout,unit)
      *
-     * @param timeout
-     * @param unit
+     * @param results the results store to use
+     * @param timeout execution timeout
+     * @param unit the time unit of the timeout
      * @return computed result. Note that this is obtained via a shared Future, and therefore should be considered
      * immutable. It is not safe to call mutating methods on the return value as multiple concurrent calls with the same
      * signature will share the same return value.
-     * @throws InterruptedException
-     * @throws java.util.concurrent.ExecutionException
-     * @throws java.util.concurrent.TimeoutException
+     * @throws InterruptedException if thread is interrupted
+     * @throws java.util.concurrent.ExecutionException if any Future throws it
+     * @throws java.util.concurrent.TimeoutException if the timeout expires
      */
     public V call(AsyncFunctionFutureResults<V> results, long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
         try {
@@ -164,7 +168,7 @@ public abstract class AsyncFunctionCall<V> {
      * Performs the asynchronous call (the "body" of the function). If you need argument (as you probably do) then they
      * should be in the constructor.
      *
-     * @throws Exception
+     * @throws Exception if there was an exception
      */
     protected abstract void asyncCall() throws Exception;
 

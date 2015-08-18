@@ -113,7 +113,7 @@ public class MemoryStateHistory {
      * Could return null in the timing stats if the bugger only includes one GC
      * (the time can only be calculated if we can see at least
      * two GC examples as the GC times reported are cumulative.
-     * @return
+     * @return the stats
      */
     public synchronized GcTimeStats getGcTimeStats() {
         MemoryStateMarker first = buffer.get(0);

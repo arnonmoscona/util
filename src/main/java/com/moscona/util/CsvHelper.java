@@ -60,11 +60,12 @@ public class CsvHelper {
     /**
      * Takes a two column CSV, discards the headers and returns is as a map where the key is the first column and the
      * value is the second.
-     * @param path
-     * @param optional
-     * @return
-     * @throws IOException
-     * @throws com.moscona.exceptions.InvalidArgumentException
+     * @param path path to the file
+     * @param optional if true then the file does not have to exist. If false, a missing file will cause an exception
+     * @param expectedHeaders the column headers you expect
+     * @return the contents of the file as a map
+     * @throws IOException if there was one
+     * @throws com.moscona.exceptions.InvalidArgumentException if the file does not look like a map (exactly two columns)
      */
     public TreeMap<String,String> loadAsMap(String path, boolean optional, String[] expectedHeaders) throws IOException, InvalidArgumentException {
         List<String[]> contents = load(path,optional);

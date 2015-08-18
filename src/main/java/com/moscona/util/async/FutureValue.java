@@ -56,7 +56,7 @@ public class FutureValue<V> implements Future<V> {
      * when <tt>cancel</tt> is called, this task should never run.  If the task has already started, then the
      * <tt>mayInterruptIfRunning</tt> parameter determines whether the thread executing this task should be interrupted
      * in an attempt to stop the task.
-     * <p/>
+     *
      * <p>After this method returns, subsequent calls to {@link #isDone} will always return <tt>true</tt>.  Subsequent
      * calls to {@link #isCancelled} will always return <tt>true</tt> if this method returned <tt>true</tt>.
      *
@@ -84,7 +84,7 @@ public class FutureValue<V> implements Future<V> {
 
     /**
      * Returns <tt>true</tt> if this task completed.
-     * <p/>
+     *
      * Completion may be due to normal termination, an exception, or cancellation -- in all of these cases, this method
      * will return <tt>true</tt>.
      *
@@ -166,7 +166,7 @@ public class FutureValue<V> implements Future<V> {
     /**
      * Sets the value of the instance and then signals waiters that the value is ready
      *
-     * @param result
+     * @param result the Future result
      */
     public void set(V result) {
         isDone.set(true);
@@ -190,7 +190,7 @@ public class FutureValue<V> implements Future<V> {
      * Causes this future to report an ExecutionException with the given throwable as its cause, unless this Future has
      * already been set or has been cancelled.
      *
-     * @param ex
+     * @param ex the exception that the caller should get
      */
     public void setException(Throwable ex) {
         if (!isDone.get()) {

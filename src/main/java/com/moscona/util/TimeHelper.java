@@ -96,10 +96,10 @@ public class TimeHelper {
 
     /**
      * A variant of the method that allows you to ignore the date
-     * @param cal
-     * @param ignoreDate
-     * @return
-     * @throws InvalidArgumentException
+     * @param cal a Calendar object
+     * @param ignoreDate use the current date regardless of the one implied by the Calendar object
+     * @return a system-internal timestamp
+     * @throws InvalidArgumentException if thrown from dependencies
      */
     public static int convertToInternalTs(Calendar cal, boolean ignoreDate) throws InvalidArgumentException {
         if (!ignoreDate) {
@@ -226,7 +226,7 @@ public class TimeHelper {
      * Converts strings of the form hh:mm and hh:mm::ss to internal server timestamps
      * @param timeStr the string to convert
      * @return an internal server timestamp (millis) corresponding to the value of the string
-     * @throws com.moscona.exceptions.InvalidArgumentException
+     * @throws com.moscona.exceptions.InvalidArgumentException if any problems are found with the string format
      */
     public static int timeStringToMillis(String timeStr) throws InvalidArgumentException {
         if (timeStr == null) {
@@ -277,7 +277,7 @@ public class TimeHelper {
      * Given a string in the format "HH:mm" produces the nearest future local time represented by the string (today or tomorrow)
      * @param timeStr a string in the format "HH:mm"
      * @return a Date object for the nearest future local time represented by the argument
-     * @throws InvalidArgumentException
+     * @throws InvalidArgumentException if any problems are found with the string format
      */
     public static Date nextFutureTimeInLocalTime(String timeStr) throws InvalidArgumentException {
         int hour = 0;
@@ -316,8 +316,8 @@ public class TimeHelper {
 
     /**
      * Checks that an integer representing an hour is actually within range
-     * @param hour
-     * @throws InvalidArgumentException
+     * @param hour the hour value to verify
+     * @throws InvalidArgumentException if it is not valid
      */
     public static void ensureIsValidHour(int hour) throws InvalidArgumentException {
         if (hour < 0 || hour>23) {
@@ -327,8 +327,8 @@ public class TimeHelper {
 
     /**
      * Checks that an integer representing a minute is actually within range
-     * @param minute
-     * @throws InvalidArgumentException
+     * @param minute the minute value to verify
+     * @throws InvalidArgumentException if it is not valid
      */
     public static void ensureIsValidMinute(int minute) throws InvalidArgumentException {
         if (minute < 0 || minute>59) {
@@ -352,8 +352,8 @@ public class TimeHelper {
 
     /**
      * makes a string in the format "yyyy-MM-dd hh:mm:ss"
-     * @param date
-     * @return
+     * @param date the date value to convert
+     * @return the formatted string
      */
     public static String toSecondString(Calendar date) {
         StringBuilder s = new StringBuilder();
@@ -369,8 +369,8 @@ public class TimeHelper {
 
     /**
      * makes a string in the format "yyyy-MM-dd"
-     * @param date
-     * @return
+     * @param date the date value to format
+     * @return the formatted string
      */
     public static String toDayString(Calendar date) {
         StringBuilder s = new StringBuilder();
@@ -383,8 +383,8 @@ public class TimeHelper {
 
     /**
      * makes a string in the format "MM/dd/yyyy"
-     * @param date
-     * @return
+     * @param date the date value to format
+     * @return the formatted string
      */
     public static String toDayStringMmDdYyyy(Calendar date) {
         StringBuilder s = new StringBuilder();
@@ -446,7 +446,7 @@ public class TimeHelper {
      * Creates a Calendar in the internal timezone for today using the provided time expression
      * @param expr a string in the format "hh:mm:ss" representing a time of day
      * @param defaultExpr null or another string in the same format that is used if the expr string is blank or null . If both are blank the return value will be null too.
-     * @return
+     * @return a Calendar object with the passed date (or default)
      * @throws InvalidArgumentException if parsing failed
      */
     public static Calendar parseTimeOfDayExpression(String expr, String defaultExpr) throws InvalidArgumentException {
@@ -458,7 +458,7 @@ public class TimeHelper {
      * @param expr a string in the format "hh:mm:ss" representing a time of day (or the delimiter, really)
      * @param defaultExpr null or another string in the same format that is used if the expr string is blank or null . If both are blank the return value will be null too.
      * @param delimiter the delimiter to use (default ":")
-     * @return
+     * @return the parsed Calendar value
      * @throws InvalidArgumentException if parsing failed
      */
     public static Calendar parseTimeOfDayExpression(String expr, String defaultExpr, String delimiter) throws InvalidArgumentException {
@@ -501,8 +501,9 @@ public class TimeHelper {
 
     /**
      * Parses strings of the form '2010-07-08 09:31:00'
-     * @param timestampString
-     * @return
+     * @param timestampString the string to parse
+     * @return the parsed Calendar value.
+     * @throws InvalidArgumentException if the parsing fails
      */
     public static Calendar parse(String timestampString) throws InvalidArgumentException {
         return parse(timestampString,"-");
@@ -587,9 +588,9 @@ public class TimeHelper {
 
     /**
      * Parses a string of the format d/m/yyyy or dd/mm/yyyy
-     * @param dateStr
-     * @return
-     * @throws com.moscona.exceptions.InvalidArgumentException
+     * @param dateStr the string to parse
+     * @return the parsed Calendar result
+     * @throws com.moscona.exceptions.InvalidArgumentException if parsing fails
      */
     public static Calendar parseMmDdYyyyDate(String dateStr) throws InvalidArgumentException {
         String [] parts = dateStr.split("/");
@@ -604,9 +605,9 @@ public class TimeHelper {
 
     /**
      * Parses a timestamp of the format mm/dd/yyyy hh:MM:ss.milis
-     * @param dateStr
-     * @return
-     * @throws InvalidArgumentException
+     * @param dateStr the string to parse
+     * @return the parsed Calendar object
+     * @throws InvalidArgumentException if the parsing fails
      */
     public static Calendar parseMmDdYyyyTimeStamp(String dateStr) throws InvalidArgumentException {
         String message = "Invalid format of \"" + dateStr + "\" expected mm/dd/yyyy hh:MM:ss.milis";
@@ -661,8 +662,9 @@ public class TimeHelper {
     }
     /**
      * Parses a string of the format yyyy/mm/dd hh:MM:ss
-     * @param ts
-     * @return
+     * @param ts the string to parse
+     * @return the parsed Calendar object
+     * @throws InvalidArgumentException if the parsing fails
      */
     public static Calendar parseMessageConventionTimeStamp(String ts) throws InvalidArgumentException {
         String[] mainParts = ts.trim().split(" +");
@@ -676,8 +678,8 @@ public class TimeHelper {
 
     /**
      * Compares date of a Calendar to a year/month/day string
-     * @param cal
-     * @param dateStr a string with a lose format of year/day/month separated by '/' and requiring a 4 digit year
+     * @param cal the first value to compare
+     * @param dateStr a string with a loose format of year/day/month separated by '/' and requiring a 4 digit year
      * @return true if they are the same date.
      */
     public static boolean isSameDay(Calendar cal, String dateStr) {
@@ -695,7 +697,7 @@ public class TimeHelper {
 
     /**
      * Determines whether the provided calendar is the same day as now
-     * @param cal
+     * @param cal the value to compare to today
      * @return true if now is the same day as the provided calendar
      */
     public static boolean isSameDay(Calendar cal) {
@@ -711,9 +713,9 @@ public class TimeHelper {
 
     /**
      * Parses a simple time string with no milliseconds like "09:30:00"
-     * @param timeString
+     * @param timeString the string to break up
      * @return an array of three integers representing te parts [hour,minute,second]
-     * @throws InvalidArgumentException
+     * @throws InvalidArgumentException if there are parsing problems
      */
     public static int[] toTimeParts(String timeString) throws InvalidArgumentException {
         int[] retval = new int[3];
@@ -784,8 +786,8 @@ public class TimeHelper {
 
     /**
      * Makes a time string of the format hh:mm:ss (no millis)
-     * @param cal
-     * @return
+     * @param cal the value to format
+     * @return the formatted string
      */
     public static String toTimeString(Calendar cal) {
         StringBuilder s = new StringBuilder();
@@ -797,9 +799,9 @@ public class TimeHelper {
 
     /**
      * The difference in days between the two calendars
-     * @param lValue
-     * @param rValue
-     * @return
+     * @param lValue one date
+     * @param rValue another date
+     * @return the difference in days
      */
     public static int daysDiff(Calendar lValue, Calendar rValue) {
         long diffMillis = lValue.getTimeInMillis() - rValue.getTimeInMillis();
@@ -808,10 +810,10 @@ public class TimeHelper {
 
     /**
      * Checks whether a date is within a range of dates (inclusive)
-     * @param timestamp
-     * @param min
-     * @param max
-     * @return
+     * @param timestamp the value to test
+     * @param min the lower bound of the range
+     * @param max the upper bound of the range
+     * @return true if the tested value is within the range
      */
     public static boolean isDayWithinRange(Calendar timestamp, Calendar min, Calendar max) {
         long testValue = clearTime(clone(timestamp)).getTimeInMillis();

@@ -106,7 +106,7 @@ public class MemoryStateMarker {
 
     /**
      * The *cumulative* GC time so far
-     * @return
+     * @return total GC time
      */
     public long getGcTime() {
         return gcTime;

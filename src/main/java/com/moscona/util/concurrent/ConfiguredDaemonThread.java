@@ -32,9 +32,9 @@ public class ConfiguredDaemonThread<Config> extends DaemonThread {
 
     /**
      * A variant of the constructor that allows flagging this instance as safe to kill
-     * @param code
-     * @param name
-     * @param config
+     * @param code the code to run
+     * @param name the name of the thread
+     * @param config the configuration (type: template parameter)
      * @param safeToKill if true, then the server thread will be killed if it becomes a zombie
      */
     public ConfiguredDaemonThread(Runnable code, String name, Config config, boolean safeToKill) {

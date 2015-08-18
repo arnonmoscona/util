@@ -37,8 +37,8 @@ public class AsyncFunctionFutureResults<V> extends ConcurrentHashMap<String, Fut
     /**
      * Notifies all callers to retrieve the results and removes the signature and future from the list
      *
-     * @param signature
-     * @param result
+     * @param signature the signature of the call
+     * @param result the result to notify callers of
      */
     public void returnToCallers(String signature, V result) {
         returnToCallers(signature, result, null, null);
@@ -86,9 +86,12 @@ public class AsyncFunctionFutureResults<V> extends ConcurrentHashMap<String, Fut
     /**
      * For testability
      *
-     * @param signature
-     * @param pollMillis
-     * @param timeoutMillis
+     * @param signature the call signature
+     * @param pollMillis the poll interval
+     * @param timeoutMillis timeout in msec
+     *
+     * @throws InterruptedException if thread is interrupted
+     * @throws InvalidStateException if signature not found
      */
     public void awaitCallers(String signature, int pollMillis, int timeoutMillis) throws InterruptedException, InvalidStateException {
         long started = System.currentTimeMillis();
@@ -107,7 +110,7 @@ public class AsyncFunctionFutureResults<V> extends ConcurrentHashMap<String, Fut
     /**
      * Cancels all pending calls on the given signature
      *
-     * @param signature
+     * @param signature the call signature
      */
     public synchronized void cancelAll(String signature) {
         FutureValue<V> future = getAndRemoveFutureValue(signature);
