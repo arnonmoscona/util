@@ -19,6 +19,7 @@ package com.moscona.test.easyb
 
 import com.moscona.exceptions.InvalidArgumentException
 import org.apache.commons.io.FileUtils
+import org.apache.commons.lang3.StringUtils
 import com.moscona.test.util.TestResourceHelper
 
 /**
