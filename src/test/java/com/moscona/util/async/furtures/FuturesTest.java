@@ -773,7 +773,7 @@ public class FuturesTest {
     public void testExtendedCompletionStageJoinNormal() throws Exception {
         CompletionStage<String> stage = Futures.newEagerAsyncCompletableFuture(Function0.fromValue("called"));
         ExtendedCompletionStage<String> extended = Futures.extend(stage);
-        String result = extended.join();
+        String result = extended.join().toString(); // FIXME why is it not returning String anyway?
 
         soft.assertThat(result).isEqualTo("called");
         soft.assertThat(extended);
@@ -792,7 +792,7 @@ public class FuturesTest {
         String result = null;
         Throwable exception = null;
         try {
-            result = extended.join();
+            result = extended.join().toString(); // FIXME why not returning String anyway?
         } catch (Throwable e) {
             exception = e;
         }
@@ -811,7 +811,7 @@ public class FuturesTest {
     public void testExtendedCompletionStageJoinNonCFNormal() throws Exception {
         CompletionStage<String> stage = makeNonCompletableFutureCompletionStage("called");
         ExtendedCompletionStage<String> extended = Futures.extend(stage);
-        String result = extended.join();
+        String result = extended.join().toString(); // FIXME why not returning String anyway?
 
         soft.assertThat(result).isEqualTo("called");
         soft.assertThat(extended);
@@ -829,7 +829,7 @@ public class FuturesTest {
         String result = null;
         Throwable exception = null;
         try {
-            result = extended.join();
+            result = extended.join().toString(); // FIXME why not returning String anyway?
         } catch (Throwable e) {
             exception = e;
         }
@@ -882,13 +882,11 @@ public class FuturesTest {
         Throwable exception = null; // we want to verify the right cause
 
         try {
-            System.err.println("calling getNow()"); // FIXME DELETE ME
             stage.getNow("alternate");
         } catch (Throwable e) {
             exception = e;
         }
 
-        // FIXME apparently timing dependent
         assertThat(exception).isNotNull();
         assertThat(exception.getCause().getMessage()).isEqualTo("boom").as("expected the thrown exception to wrap the true cause");
     }
@@ -960,7 +958,6 @@ public class FuturesTest {
 
         CompletionException exception = null; // we want to verify the right cause
         try {
-            System.err.println("calling getNow() on "+Thread.currentThread()); // FIXME DELETE ME
             stage.getNow("alternate");
         } catch (CompletionException e) {
             exception = e;

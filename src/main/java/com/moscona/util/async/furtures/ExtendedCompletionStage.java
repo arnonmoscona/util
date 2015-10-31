@@ -37,20 +37,20 @@ public interface ExtendedCompletionStage<T> extends Future<T>, CompletionStage<T
      * @throws CancellationException if the computation was cancelled
      * @throws CompletionException if this future completed exceptionally or a completion computation threw an exception
      */
-    T join() throws CancellationException, CompletionException;
+    Object join() throws CancellationException, CompletionException;
 
-    /**
-     * Waits for the computation to complete.
-     * @param timeout the maximum time to wait
-     * @param unit    the time unit of the timeout argument
-     * @throws CancellationException if the computation was cancelled
-     * @throws ExecutionException    if the computation threw an
-     *                               exception
-     * @throws InterruptedException  if the current thread was interrupted
-     *                               while waiting
-     * @throws TimeoutException      if the wait timed out
-     */
-    void awaitCompletion(int timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException;
+//    /**
+//     * Waits for the computation to complete.
+//     * @param timeout the maximum time to wait
+//     * @param unit    the time unit of the timeout argument
+//     * @throws CancellationException if the computation was cancelled
+//     * @throws ExecutionException    if the computation threw an
+//     *                               exception
+//     * @throws InterruptedException  if the current thread was interrupted
+//     *                               while waiting
+//     * @throws TimeoutException      if the wait timed out
+//     */
+//    void awaitCompletion(int timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException;
 
     /**
      * Returns the result value (or throws any encountered exception) if completed, else returns the given valueIfAbsent.

@@ -19,6 +19,8 @@ package com.moscona.util.async.furtures;
 
 import com.moscona.util.collections.Pair;
 import com.moscona.util.functions.impure.Action0;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import lombok.experimental.Delegate;
 import org.fest.reflect.core.Reflection;
 import org.fest.reflect.reference.TypeRef;
@@ -29,372 +31,407 @@ import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.*;
 
 /**
  * Created by Arnon Moscona on 10/27/2015.
  * Implementation of ExtendedCompletionStage
  */
+@EqualsAndHashCode
+@ToString
 class ExtendedCompletionStageImpl<T> implements ExtendedCompletionStage<T> {
 
-    @Delegate(types = CompletionStage.class)
-    private final CompletionStage<T> delegate;
-    private AtomicBoolean wasCanceled = new AtomicBoolean(false);
-    private AtomicBoolean wasCompleted = new AtomicBoolean(false);
-    private AtomicBoolean wasCompletedExceptionally = new AtomicBoolean(false);
-    private CountDownLatch completionSignal = new CountDownLatch(1);
-    private CountDownLatch whenCompleteSignal = new CountDownLatch(1); // used to make sure that thw trigger is installed before checking for completion
+    // FIXME wrapper should use toCompletableFuture()
+    // FIXME find a better way to delegate so i don't have to do a full test suite for CompletionStage
+
+//    @Delegate(types = {CompletionStage.class, ExtendedCompletionStage.class, Future.class})
+    private final CompletableFuture<T> delegate;
 
     public ExtendedCompletionStageImpl(CompletionStage<T> stage) {
-//        delegate = stage;
-
-        // attempt to refactor
-        //<editor-fold desc="attempt to refactor such that the normal (CF case) is always invoked">
         if (CompletableFuture.class.isAssignableFrom(stage.getClass())) {
-            delegate = stage;
+            delegate = (CompletableFuture<T>) stage;
         } else {
             // wrap it with a regular CompletableFuture
             CompletableFuture<T> wrapper = new CompletableFuture<>();
             stage.whenComplete((t,ex) -> {
-                System.err.println("wrapper whenComplete() invoked"); //fixme  DELETE ME
                 if (ex != null) {
                     wrapper.completeExceptionally(ex);
-                    System.err.println("wrapper completeExceptionally() invoked"); //fixme  DELETE ME
                 }
                 else {
                     wrapper.complete(t); // we don't care whether it's null or not
-                    System.err.println("wrapper complete() invoked"); //fixme  DELETE ME
                 }
-                System.err.println("installed hook for wrapper"); //fixme  DELETE ME
             });
             delegate = wrapper;
         }
-        //</editor-fold>
-
-        delegate.whenComplete((result, ex) -> {
-            System.err.println("calling whenComplete() on "+Thread.currentThread()); // FIXME DELETE ME
-            wasCompleted.set(true);
-            if (ex != null) {
-                wasCompletedExceptionally.set(true);
-            }
-            completionSignal.countDown();
-            System.err.println("released latch on "+Thread.currentThread()); // FIXME DELETE ME
-        });
-        whenCompleteSignal.countDown();
-        delegate.thenRun(() -> {
-            System.err.println("invoking thenRun() action on "+Thread.currentThread()); // FIXME DELETE ME
-            completionSignal.countDown();
-        });
-        delegate.exceptionally(ex -> {
-            System.err.println("invoking exceptionally() action on "+Thread.currentThread()); // FIXME DELETE ME
-            completionSignal.countDown();
-            return null;
-        });
     }
 
-    private void awaitCompletionIndefinitely() throws InterruptedException {
-        completionSignal.await();
-    }
-
-    private void awaitWhenCompleteSignal() throws InterruptedException {
-        whenCompleteSignal.await();
-    }
 
     /**
-     * <p>When the delegate is in fact a {@link Future} then this will call the {@link Future#cancel(boolean)}
-     * method of the delegate. This means that if the delegate is in fact a {@link CompletableFuture}
-     * then the behavior is exactly like {@link CompletableFuture#cancel(boolean)}. In any other case, the method
-     * will try to invoke a compatible method via reflection. </p>
-     * <p><b>The assumption here is that there is no safe way to impose a cancellation if the implementation of the
-     * {@link CompletionStage} does not cooperate to do so.</b></p>
-     * <p>From {@link Future}:</p>
-     * <i>
-     * Attempts to cancel execution of this task.  This attempt will
-     * fail if the task has already completed, has already been cancelled,
-     * or could not be cancelled for some other reason. If successful,
-     * and this task has not started when {@code cancel} is called,
-     * this task should never run.  If the task has already started,
-     * then the {@code mayInterruptIfRunning} parameter determines
-     * whether the thread executing this task should be interrupted in
-     * an attempt to stop the task.
-     * <p/>
-     * <p>After this method returns, subsequent calls to {@link #isDone} will
-     * always return {@code true}.  Subsequent calls to {@link #isCancelled}
-     * will always return {@code true} if this method returned {@code true}.
-     * </i>
-     * @param mayInterruptIfRunning {@code true} if the thread executing this
-     *                              task should be interrupted; otherwise, in-progress tasks are allowed
-     *                              to complete
-     * @return {@code false} if the task could not be cancelled,
-     * typically because it has already completed normally;
-     * {@code true} otherwise
+     * If not already completed, completes this CompletableFuture with
+     * a {@link CancellationException}. Dependent CompletableFutures
+     * that have not already completed will also complete
+     * exceptionally, with a {@link CompletionException} caused by
+     * this {@code CancellationException}.
+     *
+     * @param mayInterruptIfRunning this value has no effect in this
+     * implementation because interrupts are not used to control
+     * processing.
+     *
+     * @return {@code true} if this task is now cancelled
      */
     @Override
     public boolean cancel(boolean mayInterruptIfRunning) {
-        wasCanceled.set(true);
-
-        if (delegateIsFuture()) {
-            return ((Future)delegate).cancel(mayInterruptIfRunning);
-        }
-
-        return Reflection.method("cancel")
-                .withReturnType(boolean.class)
-                .withParameterTypes(boolean.class)
-                .in(delegate)
-                .invoke(mayInterruptIfRunning);
+        return delegate.cancel(mayInterruptIfRunning);
     }
 
     /**
-     * Returns {@code true} if this task was cancelled before it completed
-     * normally.
+     * Waits if necessary for this future to complete, and then
+     * returns its result.
      *
-     * @return {@code true} if this task was cancelled before it completed
+     * @return the result value
+     * @throws CancellationException if this future was cancelled
+     * @throws ExecutionException if this future completed exceptionally
+     * @throws InterruptedException if the current thread was interrupted
+     * while waiting
      */
     @Override
-    public boolean isCancelled() {
-        return wasCanceled.get();
-    }
-
-    /**
-     * <p>Returns {@code true} if this task completed.</p>
-     *
-     * <p>Completion may be due to normal termination, an exception, or
-     * cancellation -- in all of these cases, this method will return
-     * {@code true}.</p>
-     *
-     * @return {@code true} if this task completed
-     */
-    @Override
-    public boolean isDone() {
-        if (delegateIsFuture()) {
-            return ((Future<?>)delegate).isDone();
-        }
-
-        return wasCompleted.get();
-    }
-
-    /**
-     * Waits if necessary for the computation to complete, and then
-     * retrieves its result.
-     *
-     * @return the computed result
-     * @throws CancellationException if the computation was cancelled
-     * @throws ExecutionException    if the computation threw an
-     *                               exception
-     * @throws InterruptedException  if the current thread was interrupted
-     *                               while waiting
-     */
-    @Override
-    @SuppressWarnings({"unchecked"})
     public T get() throws InterruptedException, ExecutionException {
-        awaitCompletionIndefinitely();
-
-        if (delegateIsFuture()) {
-            return (T)((Future)delegate).get();
-        }
-
-        if(wasCanceled.get()) {
-            throw new CancellationException("was canceled");
-        }
-
-        // OK. We need a custom get(), but this one can be expressed in terms of the timeout get()
-        try {
-            return customGet(-1, TimeUnit.NANOSECONDS, false);
-        } catch (TimeoutException e) {
-            throw new ExecutionException("unexpected timeout exception", e);
-        }
+        return delegate.get();
     }
 
     /**
-     * Waits if necessary for at most the given time for the computation
-     * to complete, and then retrieves its result, if available.
+     * Waits if necessary for at most the given time for this future
+     * to complete, and then returns its result, if available.
      *
      * @param timeout the maximum time to wait
-     * @param unit    the time unit of the timeout argument
-     * @return the computed result
-     * @throws CancellationException if the computation was cancelled
-     * @throws ExecutionException    if the computation threw an
-     *                               exception
-     * @throws InterruptedException  if the current thread was interrupted
-     *                               while waiting
-     * @throws TimeoutException      if the wait timed out
+     * @param unit the time unit of the timeout argument
+     * @return the result value
+     * @throws CancellationException if this future was cancelled
+     * @throws ExecutionException if this future completed exceptionally
+     * @throws InterruptedException if the current thread was interrupted
+     * while waiting
+     * @throws TimeoutException if the wait timed out
      */
-    @SuppressWarnings("unchecked")
     @Override
     public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-        assert unit != null: "time unit may not be null";
-
-        if (delegateIsFuture()) {
-            return (T)((Future)delegate).get(timeout, unit);
-        }
-
-        return customGet(timeout, unit, true);
-    }
-
-    private boolean delegateIsFuture() {
-        return Future.class.isAssignableFrom(delegate.getClass());
-    }
-
-    private boolean delegateIsCompletableFuture() {
-        return CompletableFuture.class.isAssignableFrom(delegate.getClass());
-    }
-
-
-    //<editor-fold desc="internal implementation of get">
-    private T customGet(long timeout, TimeUnit unit, boolean useTimeout) throws InterruptedException, ExecutionException, TimeoutException {
-        // Instead of implementing our own timeout functionality we can reuse the built-in functionality of the future produced by the submit() method of an executor
-
-        Future<Pair<Optional<T>, Optional<Throwable>>> future = ForkJoinPool.commonPool().submit(this::simpleGet);
-        // we only want to propagate a timeout from the future. All the rest, we want to get to the original
-        // so that things don't get double-wrapped
-        Pair<Optional<T>, Optional<Throwable>> result;
-        if (useTimeout) {
-            result = future.get(timeout, unit);
-        }
-        else {
-            result = simpleGet();
-        }
-
-        if (result.getFirst().isPresent()) {
-            return result.getFirst().get();
-        }
-        else {
-            Throwable ex = result.getSecond().get();
-            assert ex != null : "BUG: unexpected null when an exception was expected";
-
-            switch (ex.getClass().getSimpleName()) {
-                case "ExecutionException":
-                    throw (ExecutionException) ex;
-                case "InterruptedException":
-                    throw (InterruptedException) ex;
-                default:
-                    throw new ExecutionException("Unexpected exception: "+ex, ex);
-            }
-        }
-    }
-
-    private Pair<Optional<T>, Optional<Throwable>> simpleGet() {
-        AtomicReference<T> resultReference = new AtomicReference<>();
-        AtomicReference<Throwable> exceptionReference = new AtomicReference<>();
-        AtomicBoolean hadException = new AtomicBoolean(false);
-        CountDownLatch latch = new CountDownLatch(1);
-
-        delegate.whenComplete((t, ex) -> {
-            if (ex == null) {
-                // did not have an exception
-                resultReference.set(t);
-                hadException.set(false);
-            }
-            else {
-                // had an exception
-                exceptionReference.set(ex);
-                hadException.set(true);
-            }
-            latch.countDown();
-        });
-
-        try {
-            latch.await();
-
-            if (hadException.get()) {
-                throw new ExecutionException(exceptionReference.get());
-            }
-        } catch (InterruptedException | ExecutionException e) {
-            return new Pair<>(Optional.empty(), Optional.of(e));
-        } catch (Throwable e) {
-            return new Pair<>(Optional.empty(), Optional.of(new ExecutionException(e)));
-        }
-
-        return new Pair<>(Optional.of(resultReference.get()), Optional.empty());
-    }
-    //</editor-fold>
-
-    /**
-     * Returns the result value when complete, or throws an (unchecked) exception if completed exceptionally.
-     * To better conform with the use of common functional forms, if a computation involved in the completion
-     * of this {@link ExtendedCompletionStage} threw an exception,
-     * this method throws an (unchecked) {@link CompletionException}
-     * with the underlying exception as its cause.
-     * @return the result value
-     * @throws CancellationException if the computation was cancelled
-     * @throws CompletionException if this future completed exceptionally or a completion computation threw an exception
-     */
-    @Override
-    public T join() throws CancellationException, CompletionException {
-        try {
-            return get();
-        } catch (InterruptedException e) {
-            throw new CompletionException(e);
-        } catch (ExecutionException e) {
-            throw new CompletionException(e.getCause());
-        }
+        assert unit != null : "unit may not be null";
+        return delegate.get(timeout, unit);
     }
 
     /**
-     * Waits for the computation to complete.
-     * @param timeout the maximum time to wait
-     * @param unit    the time unit of the timeout argument
-     * @throws CancellationException if the computation was cancelled
-     * @throws ExecutionException    if the computation threw an
-     *                               exception
-     * @throws InterruptedException  if the current thread was interrupted
-     *                               while waiting
-     * @throws TimeoutException      if the wait timed out
-     */
-    @Override
-    public void awaitCompletion(int timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-        throw new AssertionError("method not implemented");
-    }
-
-    /**
-     * Returns the result value (or throws any encountered exception) if completed, else returns the given valueIfAbsent.
+     * Returns the result value (or throws any encountered exception)
+     * if completed, else returns the given valueIfAbsent.
+     *
      * @param valueIfAbsent the value to return if not completed
      * @return the result value, if completed, else the given valueIfAbsent
      * @throws CancellationException if the computation was cancelled
-     * @throws CompletionException if this future completed exceptionally or a completion computation threw an exception
+     * @throws CompletionException if this future completed
+     * exceptionally or a completion computation threw an exception
      */
     @Override
-    public T getNow(T valueIfAbsent) throws CancellationException, CompletionException {
-        if (delegateIsCompletableFuture()) {
-            return ((CompletableFuture<T>)delegate).getNow(valueIfAbsent);
-        }
-
-        try {
-            awaitWhenCompleteSignal();
-            completionSignal.await(5, TimeUnit.SECONDS); // FIXME this is dead wrong
-            System.err.println("finished waiting on "+Thread.currentThread()); // FIXME DELETE ME
-        } catch (InterruptedException e) {
-            System.out.println("*** interrupted on "+Thread.currentThread()); // FIXME DELETE ME
-            throw new CompletionException("interrupted", e);
-        }
-        System.err.println("calling isDone()"); // FIXME DELETE ME
-
-        if (isDone() || wasCompletedExceptionally.get()) { // FIXME should be isCompletedExceptionally
-            try {
-                return get();
-            } catch (InterruptedException e) {
-                throw new CompletionException(e);
-            } catch (ExecutionException e) {
-                throw new CompletionException(e.getCause());
-            }
-        }
-
-        if (isCancelled()) {
-            throw new CancellationException("computation canceled");
-        }
-
-        return valueIfAbsent;
+    public T getNow(T valueIfAbsent) {
+        return delegate.getNow(valueIfAbsent);
     }
 
     /**
-     * Returns true if this ExtendedCompletionStage completed exceptionally, in any way.
-     * Possible causes include cancellation, explicit invocation of completeExceptionally,
-     * and abrupt termination of a CompletionStage action.
-     * <em><p>Note: relies on the original object having a corresponding method.</p></em>
-     * @return true if this ExtendedCompletionStage completed exceptionally
-     * @throws NoSuchMethodException if the original {@link CompletionStage} does not implement a corresponding method
+     * Returns {@code true} if this CompletableFuture was cancelled
+     * before it completed normally.
+     *
+     * @return {@code true} if this CompletableFuture was cancelled
+     * before it completed normally
      */
     @Override
-    public boolean isCompletedExceptionally() throws NoSuchMethodException {
-        throw new AssertionError("method not implemented");
+    public boolean isCancelled() {
+        return delegate.isCancelled();
+    }
+
+    /**
+     * Returns {@code true} if this CompletableFuture completed
+     * exceptionally, in any way. Possible causes include
+     * cancellation, explicit invocation of {@code
+     * completeExceptionally}, and abrupt termination of a
+     * CompletionStage action.
+     *
+     * @return {@code true} if this CompletableFuture completed
+     * exceptionally
+     */
+    @Override
+    public boolean isCompletedExceptionally() {
+        return delegate.isCompletedExceptionally();
+    }
+
+    /**
+     * Returns {@code true} if completed in any fashion: normally,
+     * exceptionally, or via cancellation.
+     *
+     * @return {@code true} if completed
+     */
+    @Override
+    public boolean isDone() {
+        return delegate.isDone();
+    }
+
+    /**
+     * Returns the result value when complete, or throws an
+     * (unchecked) exception if completed exceptionally. To better
+     * conform with the use of common functional forms, if a
+     * computation involved in the completion of this
+     * CompletableFuture threw an exception, this method throws an
+     * (unchecked) {@link CompletionException} with the underlying
+     * exception as its cause.
+     *
+     * @return the result value
+     * @throws CancellationException if the computation was cancelled
+     * @throws CompletionException if this future completed
+     * exceptionally or a completion computation threw an exception
+     */
+    @Override
+    public T join() {
+        return delegate.join();
+    }
+
+    //===============================================================================================================
+    // then...()
+
+    @Override
+    public CompletableFuture<Void> thenAccept(Consumer<? super T> action) {
+        return delegate.thenAccept(action);
+    }
+
+    @Override
+    public CompletableFuture<Void> thenAcceptAsync(Consumer<? super T> action) {
+        return delegate.thenAcceptAsync(action);
+    }
+
+    @Override
+    public CompletableFuture<Void> thenAcceptAsync(Consumer<? super T> action, Executor executor) {
+        return delegate.thenAcceptAsync(action, executor);
+    }
+
+    @Override
+    public <U> CompletableFuture<Void> thenAcceptBoth(CompletionStage<? extends U> other, BiConsumer<? super T, ? super U> action) {
+        return delegate.thenAcceptBoth(other, action);
+    }
+
+    @Override
+    public <U> CompletableFuture<Void> thenAcceptBothAsync(CompletionStage<? extends U> other, BiConsumer<? super T, ? super U> action) {
+        return delegate.thenAcceptBothAsync(other, action);
+    }
+
+    @Override
+    public <U> CompletableFuture<Void> thenAcceptBothAsync(CompletionStage<? extends U> other, BiConsumer<? super T, ? super U> action, Executor executor) {
+        return delegate.thenAcceptBothAsync(other, action, executor);
+    }
+
+    @Override
+    public <U> CompletableFuture<U> thenApply(Function<? super T, ? extends U> fn) {
+        return delegate.thenApply(fn);
+    }
+
+    @Override
+    public <U> CompletableFuture<U> thenApplyAsync(Function<? super T, ? extends U> fn) {
+        return delegate.thenApplyAsync(fn);
+    }
+
+    @Override
+    public <U> CompletableFuture<U> thenApplyAsync(Function<? super T, ? extends U> fn, Executor executor) {
+        return delegate.thenApplyAsync(fn, executor);
+    }
+
+    @Override
+    public <U, V> CompletableFuture<V> thenCombine(CompletionStage<? extends U> other, BiFunction<? super T, ? super U, ? extends V> fn) {
+        return delegate.thenCombine(other, fn);
+    }
+
+    @Override
+    public <U, V> CompletableFuture<V> thenCombineAsync(CompletionStage<? extends U> other, BiFunction<? super T, ? super U, ? extends V> fn) {
+        return delegate.thenCombineAsync(other, fn);
+    }
+
+    @Override
+    public <U, V> CompletableFuture<V> thenCombineAsync(CompletionStage<? extends U> other, BiFunction<? super T, ? super U, ? extends V> fn, Executor executor) {
+        return delegate.thenCombineAsync(other, fn, executor);
+    }
+
+    @Override
+    public <U> CompletableFuture<U> thenCompose(Function<? super T, ? extends CompletionStage<U>> fn) {
+        return delegate.thenCompose(fn);
+    }
+
+    @Override
+    public <U> CompletableFuture<U> thenComposeAsync(Function<? super T, ? extends CompletionStage<U>> fn) {
+        return delegate.thenComposeAsync(fn);
+    }
+
+    @Override
+    public <U> CompletableFuture<U> thenComposeAsync(Function<? super T, ? extends CompletionStage<U>> fn, Executor executor) {
+        return delegate.thenComposeAsync(fn, executor);
+    }
+
+    @Override
+    public CompletableFuture<Void> thenRun(Runnable action) {
+        return delegate.thenRun(action);
+    }
+
+    @Override
+    public CompletableFuture<Void> thenRunAsync(Runnable action) {
+        return delegate.thenRunAsync(action);
+    }
+
+    @Override
+    public CompletableFuture<Void> thenRunAsync(Runnable action, Executor executor) {
+        return delegate.thenRunAsync(action, executor);
+    }
+
+
+
+    //===============================================================================================================
+    // runAfter...()
+
+
+    @Override
+    public CompletableFuture<Void> runAfterBoth(CompletionStage<?> other, Runnable action) {
+        return delegate.runAfterBoth(other, action);
+    }
+
+    @Override
+    public CompletableFuture<Void> runAfterBothAsync(CompletionStage<?> other, Runnable action) {
+        return delegate.runAfterBothAsync(other, action);
+    }
+
+    @Override
+    public CompletableFuture<Void> runAfterBothAsync(CompletionStage<?> other, Runnable action, Executor executor) {
+        return delegate.runAfterBothAsync(other, action, executor);
+    }
+
+    @Override
+    public CompletableFuture<Void> runAfterEither(CompletionStage<?> other, Runnable action) {
+        return delegate.runAfterEither(other, action);
+    }
+
+    @Override
+    public CompletableFuture<Void> runAfterEitherAsync(CompletionStage<?> other, Runnable action) {
+        return delegate.runAfterEitherAsync(other, action);
+    }
+
+    @Override
+    public CompletableFuture<Void> runAfterEitherAsync(CompletionStage<?> other, Runnable action, Executor executor) {
+        return delegate.runAfterEitherAsync(other, action, executor);
+    }
+
+
+    //===============================================================================================================
+    // exceptions...
+
+
+    /**
+     * Returns a new CompletableFuture that is completed when this
+     * CompletableFuture completes, with the result of the given
+     * function of the exception triggering this CompletableFuture's
+     * completion when it completes exceptionally; otherwise, if this
+     * CompletableFuture completes normally, then the returned
+     * CompletableFuture also completes normally with the same value.
+     * Note: More flexible versions of this functionality are
+     * available using methods {@code whenComplete} and {@code handle}.
+     *
+     * @param fn the function to use to compute the value of the
+     * returned CompletableFuture if this CompletableFuture completed
+     * exceptionally
+     * @return the new CompletableFuture
+     */
+    @Override
+    public CompletableFuture<T> exceptionally(Function<Throwable, ? extends T> fn) {
+        return delegate.exceptionally(fn);
+    }
+
+    @Override
+    public <U> CompletableFuture<U> handle(BiFunction<? super T, Throwable, ? extends U> fn) {
+        return delegate.handle(fn);
+    }
+
+    @Override
+    public <U> CompletableFuture<U> handleAsync(BiFunction<? super T, Throwable, ? extends U> fn) {
+        return delegate.handleAsync(fn);
+    }
+
+    @Override
+    public <U> CompletableFuture<U> handleAsync(BiFunction<? super T, Throwable, ? extends U> fn, Executor executor) {
+        return delegate.handleAsync(fn, executor);
+    }
+
+
+
+    //===============================================================================================================
+    // accept...()
+
+
+    @Override
+    public CompletableFuture<Void> acceptEither(CompletionStage<? extends T> other, Consumer<? super T> action) {
+        return delegate.acceptEither(other, action);
+    }
+
+    @Override
+    public CompletableFuture<Void> acceptEitherAsync(CompletionStage<? extends T> other, Consumer<? super T> action) {
+        return delegate.acceptEitherAsync(other, action);
+    }
+
+    @Override
+    public CompletableFuture<Void> acceptEitherAsync(CompletionStage<? extends T> other, Consumer<? super T> action, Executor executor) {
+        return delegate.acceptEitherAsync(other, action, executor);
+    }
+
+
+
+    //===============================================================================================================
+    // apply...()
+
+
+    @Override
+    public <U> CompletableFuture<U> applyToEither(CompletionStage<? extends T> other, Function<? super T, U> fn) {
+        return delegate.applyToEither(other, fn);
+    }
+
+    @Override
+    public <U> CompletableFuture<U> applyToEitherAsync(CompletionStage<? extends T> other, Function<? super T, U> fn) {
+        return delegate.applyToEitherAsync(other, fn);
+    }
+
+    @Override
+    public <U> CompletableFuture<U> applyToEitherAsync(CompletionStage<? extends T> other, Function<? super T, U> fn, Executor executor) {
+        return delegate.applyToEitherAsync(other, fn, executor);
+    }
+
+
+    //===============================================================================================================
+    // whenComplete...()
+
+    @Override
+    public CompletableFuture<T> whenComplete(BiConsumer<? super T, ? super Throwable> action) {
+        return delegate.whenComplete(action);
+    }
+
+    @Override
+    public CompletableFuture<T> whenCompleteAsync(BiConsumer<? super T, ? super Throwable> action) {
+        return delegate.whenCompleteAsync(action);
+    }
+
+    @Override
+    public CompletableFuture<T> whenCompleteAsync(BiConsumer<? super T, ? super Throwable> action, Executor executor) {
+        return delegate.whenCompleteAsync(action, executor);
+    }
+
+
+    //===============================================================================================================
+    // others ...
+
+
+    /**
+     * Returns this CompletableFuture
+     *
+     * @return this CompletableFuture
+     */
+    @Override
+    public CompletableFuture<T> toCompletableFuture() {
+        return delegate.toCompletableFuture();
     }
 }
