@@ -41,8 +41,7 @@ import java.util.function.*;
 @ToString
 class ExtendedCompletionStageImpl<T> implements ExtendedCompletionStage<T> {
 
-    // FIXME wrapper should use toCompletableFuture()
-    // FIXME find a better way to delegate so i don't have to do a full test suite for CompletionStage
+    // FIXME find a better way to delegate so I don't have to do a full test suite for CompletionStage
 
 //    @Delegate(types = {CompletionStage.class, ExtendedCompletionStage.class, Future.class})
     private final CompletableFuture<T> delegate;
@@ -52,16 +51,7 @@ class ExtendedCompletionStageImpl<T> implements ExtendedCompletionStage<T> {
             delegate = (CompletableFuture<T>) stage;
         } else {
             // wrap it with a regular CompletableFuture
-            CompletableFuture<T> wrapper = new CompletableFuture<>();
-            stage.whenComplete((t,ex) -> {
-                if (ex != null) {
-                    wrapper.completeExceptionally(ex);
-                }
-                else {
-                    wrapper.complete(t); // we don't care whether it's null or not
-                }
-            });
-            delegate = wrapper;
+            delegate = stage.toCompletableFuture();
         }
     }
 
@@ -188,6 +178,24 @@ class ExtendedCompletionStageImpl<T> implements ExtendedCompletionStage<T> {
     @Override
     public T join() {
         return delegate.join();
+    }
+
+    /**
+     * Waits for the computation to complete.
+     *
+     * @param timeout the maximum time to wait
+     * @param unit    the time unit of the timeout argument
+     * @throws InterruptedException  if the current thread was interrupted
+     *                               while waiting
+     * @throws TimeoutException      if the wait timed out
+     */
+    @Override
+    public void awaitCompletion(int timeout, TimeUnit unit) throws InterruptedException, TimeoutException {
+        try {
+            delegate.get(timeout, unit);
+        } catch (ExecutionException | CancellationException e) {
+            // do nothing
+        }
     }
 
     //===============================================================================================================

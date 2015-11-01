@@ -37,20 +37,19 @@ public interface ExtendedCompletionStage<T> extends Future<T>, CompletionStage<T
      * @throws CancellationException if the computation was cancelled
      * @throws CompletionException if this future completed exceptionally or a completion computation threw an exception
      */
-    Object join() throws CancellationException, CompletionException;
+    T join() throws CancellationException, CompletionException;
 
-//    /**
-//     * Waits for the computation to complete.
-//     * @param timeout the maximum time to wait
-//     * @param unit    the time unit of the timeout argument
-//     * @throws CancellationException if the computation was cancelled
-//     * @throws ExecutionException    if the computation threw an
-//     *                               exception
-//     * @throws InterruptedException  if the current thread was interrupted
-//     *                               while waiting
-//     * @throws TimeoutException      if the wait timed out
-//     */
-//    void awaitCompletion(int timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException;
+    /**
+     * Waits for the computation to complete. This is supposed to be easier, cleaner, and more self-documenting then
+     * calling {@link CompletableFuture#get()} for a synchronous continuation. Exceptions are not thrown if there was an exceptional completion
+     * or if there was a cancellation. If exceptions are desired, then a call to {@link #get()} may be more appropriate;
+     * @param timeout the maximum time to wait
+     * @param unit    the time unit of the timeout argument
+     * @throws InterruptedException  if the current thread was interrupted
+     *                               while waiting
+     * @throws TimeoutException      if the wait timed out
+     */
+    void awaitCompletion(int timeout, TimeUnit unit) throws InterruptedException, TimeoutException;
 
     /**
      * Returns the result value (or throws any encountered exception) if completed, else returns the given valueIfAbsent.

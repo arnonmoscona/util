@@ -773,7 +773,7 @@ public class FuturesTest {
     public void testExtendedCompletionStageJoinNormal() throws Exception {
         CompletionStage<String> stage = Futures.newEagerAsyncCompletableFuture(Function0.fromValue("called"));
         ExtendedCompletionStage<String> extended = Futures.extend(stage);
-        String result = extended.join().toString(); // FIXME why is it not returning String anyway?
+        String result = extended.join();
 
         soft.assertThat(result).isEqualTo("called");
         soft.assertThat(extended);
@@ -792,7 +792,7 @@ public class FuturesTest {
         String result = null;
         Throwable exception = null;
         try {
-            result = extended.join().toString(); // FIXME why not returning String anyway?
+            result = extended.join();
         } catch (Throwable e) {
             exception = e;
         }
@@ -811,7 +811,7 @@ public class FuturesTest {
     public void testExtendedCompletionStageJoinNonCFNormal() throws Exception {
         CompletionStage<String> stage = makeNonCompletableFutureCompletionStage("called");
         ExtendedCompletionStage<String> extended = Futures.extend(stage);
-        String result = extended.join().toString(); // FIXME why not returning String anyway?
+        String result = extended.join();
 
         soft.assertThat(result).isEqualTo("called");
         soft.assertThat(extended);
@@ -829,7 +829,7 @@ public class FuturesTest {
         String result = null;
         Throwable exception = null;
         try {
-            result = extended.join().toString(); // FIXME why not returning String anyway?
+            result = extended.join();
         } catch (Throwable e) {
             exception = e;
         }
@@ -989,15 +989,72 @@ public class FuturesTest {
     }
     //</editor-fold>
 
-
     //<editor-fold desc="extended: isCompletedExceptionally()">
     /**
      * Tests isCompletedExceptionally() - no exception
      */
     @Test
     public void testIsCompletedExceptionallyNoException() throws Exception {
-        throw new AssertionError("testIsCompletedExceptionallyNoExceptionNoException() not implemented");
+        ExtendedCompletionStage<String> stage = Futures.extend(Futures.newEagerAsyncCompletableFuture(Function0.fromValue("done")));
+        stage.get(); // wait for completion
+        assertThat(stage.isCompletedExceptionally()).isFalse();
     }
+
+    /**
+     * Tests isCompletedExceptionally()
+     */
+    @Test
+    public void testIsCompletedExceptionallyWithException() throws Exception {
+        ExtendedCompletionStage<String> stage = Futures.extend(makeBrokenCompletionStage("boom"));
+        stage.awaitCompletion(1, TimeUnit.SECONDS);
+        assertThat(stage.isCompletedExceptionally()).isTrue();
+    }
+
+    /**
+     * Tests isCompletedExceptionally()
+     */
+    @Test
+    public void testIsCompletedExceptionallyIncomplete() throws Exception {
+        ExtendedCompletionStage<String> stage = Futures.extend(Futures.newEagerAsyncCompletableFuture(functionAwaitingSignal("done", signal)));
+        assertThat(stage.isCompletedExceptionally()).isFalse();
+        signal.countDown(); // keep it clean
+    }
+
+    // with a delegate that is not a CompletableFuture ==========================================================
+
+    /**
+     * Tests isCompletedExceptionally() - no exception
+     * when delegate is not a CompletableFuture
+     */
+    @Test
+    public void testIsCompletedExceptionallyNonCFNoException() throws Exception {
+        ExtendedCompletionStage<String> stage = Futures.extend(new TestingStage<>(Futures.newEagerAsyncCompletableFuture(Function0.fromValue("done"))));
+        stage.get(); // wait for completion
+        assertThat(stage.isCompletedExceptionally()).isFalse();
+    }
+
+    /**
+     * Tests isCompletedExceptionally()
+     * when delegate is not a CompletableFuture
+     */
+    @Test
+    public void testIsCompletedExceptionallyNonCFWithException() throws Exception {
+        ExtendedCompletionStage<String> stage = Futures.extend(new TestingStage<>(makeBrokenCompletionStage("boom")));
+        stage.awaitCompletion(1, TimeUnit.SECONDS);
+        assertThat(stage.isCompletedExceptionally()).isTrue();
+    }
+
+    /**
+     * Tests isCompletedExceptionally()
+     * when delegate is not a CompletableFuture
+     */
+    @Test
+    public void testIsCompletedExceptionallyNonCFIncomplete() throws Exception {
+        ExtendedCompletionStage<String> stage = Futures.extend(new TestingStage<>(Futures.newEagerAsyncCompletableFuture(functionAwaitingSignal("done", signal))));
+        assertThat(stage.isCompletedExceptionally()).isFalse();
+        signal.countDown(); // keep it clean
+    }
+
     //</editor-fold>
 
     //<editor-fold desc="extended: awaitCompletion()">
@@ -1006,8 +1063,125 @@ public class FuturesTest {
      */
     @Test
     public void testAwaitCompletionNoException() throws Exception {
-        throw new AssertionError("testAwaitCompletionNoExceptionNoException() not implemented");
+        // TODO: 10/31/2015 this is not the best test I can imagine for this, but a multi-threaded one would be a bit of a pain and slow
+        ExtendedCompletionStage<String> stage = Futures.extend(Futures.newEagerAsyncCompletableFuture(functionAwaitingSignal("done", signal)));
+        soft.assertThat(stage.isDone()).isFalse().as("should not be completed yet");
+        signal.countDown();
+        stage.awaitCompletion(1, TimeUnit.SECONDS);
+        soft.assertThat(stage.isDone()).isTrue().as("now is completed");
+        soft.assertAll();
     }
+
+    /**
+     * Tests awaitCompletion() with exception thrown
+     */
+    @Test
+    public void testAwaitCompletionWithException() throws Exception {
+        ExtendedCompletionStage<String> stage = Futures.extend(makeBrokenCompletionStage("boom"));
+        stage.awaitCompletion(1, TimeUnit.SECONDS);
+
+        assertThat(stage.isCompletedExceptionally()).isTrue();
+    }
+
+    /**
+     * Tests awaitCompletion() with a timeout
+     */
+    @Test
+    public void testAwaitCompletionTimeout() throws Exception {
+        ExtendedCompletionStage<String> stage = Futures.extend(Futures.newEagerAsyncCompletableFuture(functionAwaitingSignal("done", signal)));
+
+        TimeoutException exception = null;
+        try {
+            stage.awaitCompletion(50, TimeUnit.MILLISECONDS);
+        }
+        catch (TimeoutException e) {
+            exception = e;
+        }
+        signal.countDown(); // just for clear completion. Not logically needed
+
+        assertThat(exception).isNotNull().as("expected TimeoutException to have been thrown");
+    }
+
+    /**
+     * Tests awaitCompletion() when canceled
+     */
+    @Test
+    public void testAwaitCompletionWithCancel() throws Exception {
+        ExtendedCompletionStage<String> stage = Futures.extend(Futures.newEagerAsyncCompletableFuture(functionAwaitingSignal("done", signal)));
+        soft.assertThat(stage.isDone()).isFalse().as("should not be completed yet");
+        stage.cancel(true);
+
+        stage.awaitCompletion(1, TimeUnit.SECONDS);
+        signal.countDown(); // keep it clean
+        assertThat(stage.isCancelled()).isTrue(); // no exception, state is correct
+    }
+
+    // when delegate is not a CompletableFuture =================================================================
+
+    /**
+     * Tests awaitCompletion() - no exception
+     * when delegate is not a CompletableFuture
+     */
+    @Test
+    public void testAwaitCompletionNonCFNoException() throws Exception {
+        // TODO: 10/31/2015 this is not the best test I can imagine for this, but a multi-threaded one would be a bit of a pain and slow
+        ExtendedCompletionStage<String> stage = Futures.extend(
+                new TestingStage<>(Futures.newEagerAsyncCompletableFuture(functionAwaitingSignal("done", signal))));
+        soft.assertThat(stage.isDone()).isFalse().as("should not be completed yet");
+        signal.countDown();
+        stage.awaitCompletion(1, TimeUnit.SECONDS);
+        soft.assertThat(stage.isDone()).isTrue().as("now is completed");
+        soft.assertAll();
+    }
+
+    /**
+     * Tests awaitCompletion() with exception thrown
+     * when delegate is not a CompletableFuture
+     */
+    @Test
+    public void testAwaitCompletionNonCFWithException() throws Exception {
+        ExtendedCompletionStage<String> stage = Futures.extend(new TestingStage<>(makeBrokenCompletionStage("boom")));
+        stage.awaitCompletion(1, TimeUnit.SECONDS);
+        assertThat(stage.isCompletedExceptionally()).isTrue();
+    }
+
+    /**
+     * Tests awaitCompletion() with a timeout
+     * when delegate is not a CompletableFuture
+     */
+    @Test
+    public void testAwaitCompletionNonCFTimeout() throws Exception {
+        ExtendedCompletionStage<String> stage = Futures.extend(
+                new TestingStage<>(Futures.newEagerAsyncCompletableFuture(functionAwaitingSignal("done", signal))));
+
+        TimeoutException exception = null;
+        try {
+            stage.awaitCompletion(50, TimeUnit.MILLISECONDS);
+        }
+        catch (TimeoutException e) {
+            exception = e;
+        }
+        signal.countDown(); // just for clear completion. Not logically needed
+
+        assertThat(exception).isNotNull().as("expected TimeoutException to have been thrown");
+    }
+
+    /**
+     * Tests awaitCompletion() when canceled
+     * when delegate is not a CompletableFuture
+     */
+    @Test
+    public void testAwaitCompletionNonCFWithCancel() throws Exception {
+        ExtendedCompletionStage<String> stage = Futures.extend(
+                new TestingStage<>(Futures.newEagerAsyncCompletableFuture(functionAwaitingSignal("done", signal))));
+        soft.assertThat(stage.isDone()).isFalse().as("should not be completed yet");
+        stage.cancel(true);
+
+        stage.awaitCompletion(1, TimeUnit.SECONDS);
+        assertThat(stage.isCancelled()).isTrue(); // no exception thrown and state is correct
+        signal.countDown(); // just keep it clean
+    }
+
     //</editor-fold>
     //</editor-fold>
 
