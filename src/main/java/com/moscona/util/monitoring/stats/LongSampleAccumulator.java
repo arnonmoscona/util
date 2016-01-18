@@ -149,7 +149,7 @@ public class LongSampleAccumulator implements ISimpleDescriptiveStatistic, Clone
         return (count==0)?0.0:Math.sqrt(variance());
     }
 
-    private double variance() {
+    public double variance() {
         double mean = mean();
         return (count==0)?0.0:((double)sumSquares - 2.0*mean*sum + count*mean*mean)/count;
     }

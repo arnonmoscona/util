@@ -603,8 +603,8 @@ public class FuturesTest {
             exception = e;
         }
 
-        soft.assertThat(exception).isNotNull().as("expected a cancellation exception");
-        soft.assertThat(exception).isInstanceOf(CancellationException.class).as("expected a cancellation exception");
+        soft.assertThat(exception).as("expected a cancellation exception").isNotNull();
+        soft.assertThat(exception).as("expected a cancellation exception").isInstanceOf(CancellationException.class);
 
 //        soft.assertThat(evidence.get()).isEqualTo("not set"); // this is unreliable and does not seem to be required in CompletableFuture either
 //        soft.assertThat(cs.isCanceled()).isTrue().as("cs should have been canceled"); // canceled was called
@@ -638,8 +638,8 @@ public class FuturesTest {
             exception = e;
         }
 
-        soft.assertThat(exception).isNotNull().as("expected a cancellation exception");
-        soft.assertThat(exception).isInstanceOf(CancellationException.class).as("expected a cancellation exception");
+        soft.assertThat(exception).as("expected a cancellation exception").isNotNull();
+        soft.assertThat(exception).as("expected a cancellation exception").isInstanceOf(CancellationException.class);
 
         //soft.assertThat(evidence.get()).isEqualTo("not set"); // this is unreliable and does not seem to be required in CompletableFuture either
 //        soft.assertThat(cs.isCanceled()).isTrue().as("cs should have been canceled"); // canceled was called
@@ -663,7 +663,7 @@ public class FuturesTest {
         extended.get();
 
         boolean isDone = extended.isDone();
-        assertThat(isDone).isTrue().as("expected future to be done");
+        assertThat(isDone).as("expected future to be done").isTrue();
     }
 
     /**
@@ -682,7 +682,7 @@ public class FuturesTest {
         }
 
         boolean isDone = extended.isDone();
-        assertThat(isDone).isTrue().as("expected future to be done");
+        assertThat(isDone).as("expected future to be done").isTrue();
     }
 
     /**
@@ -694,13 +694,13 @@ public class FuturesTest {
         ExtendedCompletionStage<?> extended = Futures.extend(future);
 
         boolean isDone = extended.isDone();
-        soft.assertThat(isDone).isFalse().as("expecting future not done yet");
+        soft.assertThat(isDone).as("expecting future not done yet").isFalse();
         signal.countDown();
 
         // wait until done
         extended.get();
 
-        soft.assertThat(extended.isDone()).isTrue().as("expected future to be done");
+        soft.assertThat(extended.isDone()).as("expected future to be done").isTrue();
         soft.assertAll();
     }
 
@@ -717,7 +717,7 @@ public class FuturesTest {
         extended.get();
 
         boolean isDone = extended.isDone();
-        assertThat(isDone).isTrue().as("expected future to be done");
+        assertThat(isDone).as("expected future to be done").isTrue();
     }
 
     /**
@@ -737,7 +737,7 @@ public class FuturesTest {
         }
 
         boolean isDone = extended.isDone();
-        assertThat(isDone).isTrue().as("expected future to be done");
+        assertThat(isDone).as("expected future to be done").isTrue();
     }
 
     /**
@@ -752,13 +752,13 @@ public class FuturesTest {
         ExtendedCompletionStage<?> extended = Futures.extend(new TestingStage<>(future));
 
         boolean isDone = extended.isDone();
-        soft.assertThat(isDone).isFalse().as("expecting future not done yet");
+        soft.assertThat(isDone).as("expecting future not done yet").isFalse();
         signal.countDown();
 
         // wait until done
         extended.get();
 
-        soft.assertThat(extended.isDone()).isTrue().as("expected future to be done");
+        soft.assertThat(extended.isDone()).as("expected future to be done").isTrue();
         soft.assertAll();
     }
     //</editor-fold>
@@ -888,7 +888,7 @@ public class FuturesTest {
         }
 
         assertThat(exception).isNotNull();
-        assertThat(exception.getCause().getMessage()).isEqualTo("boom").as("expected the thrown exception to wrap the true cause");
+        assertThat(exception.getCause().getMessage()).as("expected the thrown exception to wrap the true cause").isEqualTo("boom");
     }
 
     /**
@@ -907,7 +907,7 @@ public class FuturesTest {
             caught = true; // must catch in order to let the function cleanly complete at the end
         }
         signal.countDown();
-        assertThat(caught).isTrue().as("should have thrown CancellationException");
+        assertThat(caught).as("should have thrown CancellationException").isTrue();
     }
 
     //=============================== nonCF variants
@@ -963,8 +963,8 @@ public class FuturesTest {
             exception = e;
         }
 
-        assertThat(exception).isNotNull().as("should have thrown an exception");
-        assertThat(exception.getCause().getMessage()).isEqualTo("boom").as("expected the thrown exception to wrap the true cause");
+        assertThat(exception).as("should have thrown an exception").isNotNull();
+        assertThat(exception.getCause().getMessage()).as("expected the thrown exception to wrap the true cause").isEqualTo("boom");
     }
 
     /**
@@ -985,7 +985,7 @@ public class FuturesTest {
             caught = true; // must catch in order to let the function cleanly complete at the end
         }
         signal.countDown();
-        assertThat(caught).isTrue().as("should have thrown CancellationException");
+        assertThat(caught).as("should have thrown CancellationException").isTrue();
     }
     //</editor-fold>
 
@@ -1065,10 +1065,10 @@ public class FuturesTest {
     public void testAwaitCompletionNoException() throws Exception {
         // TODO: 10/31/2015 this is not the best test I can imagine for this, but a multi-threaded one would be a bit of a pain and slow
         ExtendedCompletionStage<String> stage = Futures.extend(Futures.newEagerAsyncCompletableFuture(functionAwaitingSignal("done", signal)));
-        soft.assertThat(stage.isDone()).isFalse().as("should not be completed yet");
+        soft.assertThat(stage.isDone()).as("should not be completed yet").isFalse();
         signal.countDown();
         stage.awaitCompletion(1, TimeUnit.SECONDS);
-        soft.assertThat(stage.isDone()).isTrue().as("now is completed");
+        soft.assertThat(stage.isDone()).as("now is completed").isTrue();
         soft.assertAll();
     }
 
@@ -1099,7 +1099,7 @@ public class FuturesTest {
         }
         signal.countDown(); // just for clear completion. Not logically needed
 
-        assertThat(exception).isNotNull().as("expected TimeoutException to have been thrown");
+        assertThat(exception).as("expected TimeoutException to have been thrown").isNotNull();
     }
 
     /**
@@ -1108,7 +1108,7 @@ public class FuturesTest {
     @Test
     public void testAwaitCompletionWithCancel() throws Exception {
         ExtendedCompletionStage<String> stage = Futures.extend(Futures.newEagerAsyncCompletableFuture(functionAwaitingSignal("done", signal)));
-        soft.assertThat(stage.isDone()).isFalse().as("should not be completed yet");
+        soft.assertThat(stage.isDone()).as("should not be completed yet").isFalse();
         stage.cancel(true);
 
         stage.awaitCompletion(1, TimeUnit.SECONDS);
@@ -1127,10 +1127,10 @@ public class FuturesTest {
         // TODO: 10/31/2015 this is not the best test I can imagine for this, but a multi-threaded one would be a bit of a pain and slow
         ExtendedCompletionStage<String> stage = Futures.extend(
                 new TestingStage<>(Futures.newEagerAsyncCompletableFuture(functionAwaitingSignal("done", signal))));
-        soft.assertThat(stage.isDone()).isFalse().as("should not be completed yet");
+        soft.assertThat(stage.isDone()).as("should not be completed yet").isFalse();
         signal.countDown();
         stage.awaitCompletion(1, TimeUnit.SECONDS);
-        soft.assertThat(stage.isDone()).isTrue().as("now is completed");
+        soft.assertThat(stage.isDone()).as("now is completed").isTrue();
         soft.assertAll();
     }
 
@@ -1163,7 +1163,7 @@ public class FuturesTest {
         }
         signal.countDown(); // just for clear completion. Not logically needed
 
-        assertThat(exception).isNotNull().as("expected TimeoutException to have been thrown");
+        assertThat(exception).as("expected TimeoutException to have been thrown").isNotNull();
     }
 
     /**
@@ -1174,7 +1174,7 @@ public class FuturesTest {
     public void testAwaitCompletionNonCFWithCancel() throws Exception {
         ExtendedCompletionStage<String> stage = Futures.extend(
                 new TestingStage<>(Futures.newEagerAsyncCompletableFuture(functionAwaitingSignal("done", signal))));
-        soft.assertThat(stage.isDone()).isFalse().as("should not be completed yet");
+        soft.assertThat(stage.isDone()).as("should not be completed yet").isFalse();
         stage.cancel(true);
 
         stage.awaitCompletion(1, TimeUnit.SECONDS);

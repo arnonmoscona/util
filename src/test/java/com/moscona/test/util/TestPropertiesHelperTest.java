@@ -36,6 +36,7 @@ import static org.junit.Assert.*;
  * @since <pre>May 6, 2014</pre>
  */
 public class TestPropertiesHelperTest {
+    // FIXME everything here must be reviewed to see if it's still needed
 
     @Before
     public void before() throws Exception {
@@ -50,10 +51,10 @@ public class TestPropertiesHelperTest {
      */
     @Test
     public void testGetProjectRootPath() throws Exception {
-        TestResourceHelper helper = new TestResourceHelper("projectRootMaker");
+        TestResourceHelper helper = new TestResourceHelper("projectRootMaker"); //fixme this is a major bug - get rid of it
         String root = helper.getProjectRootPath();
         assertTrue("failed root test", (new File(root + "/src/test/groovy")).exists());
-        Class.forName("com.moscona.test.easyb.TestHelper");
+//        Class.forName("com.moscona.test.easyb.TestHelper");
     }
 
     @Test

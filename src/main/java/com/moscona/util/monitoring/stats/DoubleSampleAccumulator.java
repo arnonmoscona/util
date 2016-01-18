@@ -138,7 +138,7 @@ public class DoubleSampleAccumulator implements ISimpleDescriptiveStatistic {
         return (count==0)?0.0:Math.sqrt(variance());
     }
 
-    private double variance() {
+    public double variance() {
         double mean = mean();
         // FIXME IT-681 this calculation should be changed from the sum squares method (which is easy but can be very inaccurate) to Welford's method
         return Math.max(

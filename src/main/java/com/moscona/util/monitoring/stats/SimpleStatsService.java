@@ -326,7 +326,7 @@ public class SimpleStatsService implements IStatsService {
                 IStatValue statValue = new StatValue(millis, true);
                 stats.put(name, statValue);
                 statValue.attachDescriptiveStats();
-                statValue.getDescriptiveStatistics().clear();
+//                statValue.getDescriptiveStatistics().clear();
             } else {
                 iStatValue.setAndAccumulate(millis);
             }

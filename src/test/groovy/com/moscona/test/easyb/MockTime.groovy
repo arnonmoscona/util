@@ -15,7 +15,8 @@
  *     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.moscona.test.easyb
+package com.moscona.test.easyb // FIXME at the very least the package should be changed
+// FIXME everything here must be reviewed to see if it's still needed
 
 import com.moscona.util.ITimeHelperDelegate
 import com.moscona.util.TimeHelper

@@ -16,6 +16,7 @@
  */
 
 package com.moscona.test.easyb
+// FIXME everything here must be reviewed to see if it's still needed, and if it is then a better way to package this must be found so that it works well with Spock and DOES NOT HAVE TO BE COPIED TO EVERY PROJECT. This whole thing is a test mix-in and should also be repackaged so that it's aligned with how things are done in Groovy 2.4
 
 import com.moscona.exceptions.InvalidArgumentException
 import org.apache.commons.io.FileUtils
@@ -40,7 +41,7 @@ class TestHelper {
     if (! Number.metaClass.methods*.name.contains("shouldBeCloseTo")) {
       Number.metaClass.shouldBeCloseTo = { expected, tolerance ->
         if (Math.abs(expected-delegate) > tolerance) {
-          throw new org.easyb.exception.VerificationException("Expected $delegate to be close to $expected (within $tolerance) but the difference is ${expected-delegate}")
+          throw new RuntimeException("Expected $delegate to be close to $expected (within $tolerance) but the difference is ${expected-delegate}")
         }
       }
     }
@@ -49,7 +50,7 @@ class TestHelper {
 //    if (! Number.metaClass.methods*.name.contains("shouldBe")) {
 //      Number.metaClass.shouldBe = { expected->
 //        if (delegate==null || !delegate.equals(expected)) {
-//          throw new org.easyb.exception.VerificationException("Expected $delegate to be $expected")
+//          throw new RuntimeException("Expected $delegate to be $expected")
 //        }
 //      }
 //    }
@@ -58,7 +59,7 @@ class TestHelper {
     if (! String.metaClass.methods*.name.contains("shouldMatch")) {
       String.metaClass.shouldMatch = { regexp ->
         if (!(delegate =~ regexp).matches()) {
-          throw new org.easyb.exception.VerificationException("Expected '$delegate' to match /$regexp/")
+          throw new RuntimeException("Expected '$delegate' to match /$regexp/")
         }
       }
     }
@@ -69,7 +70,7 @@ class TestHelper {
         if (!(delegate.equals(value.toString()) )) {
           def diffAt = StringUtils.indexOfDifference(delegate as String,value.toString());
           def diffStr = "expected: $value\n          ${"-"*diffAt+"|"}\n     got: $delegate\n"
-          throw new org.easyb.exception.VerificationException("Expected '$delegate' to equal '$value'\n\n$diffStr")
+          throw new RuntimeException("Expected '$delegate' to equal '$value'\n\n$diffStr")
         }
       }
     }
@@ -80,7 +81,7 @@ class TestHelper {
         if (!(delegate.toString().equals(value.toString()) )) {
           def diffAt = StringUtils.indexOfDifference(delegate as String,value.toString());
           def diffStr = "expected: $value\n          ${"-"*diffAt+"|"}\n     got: $delegate\n"
-          throw new org.easyb.exception.VerificationException("Expected '$delegate' to equal '$value'\n\n$diffStr")
+          throw new RuntimeException("Expected '$delegate' to equal '$value'\n\n$diffStr")
         }
       }
     }
@@ -244,7 +245,7 @@ class TestHelper {
       if (clazz.isAssignableFrom(ex.class)) {
         System.err.println("Unexpected exception: $ex")
         printFilteredStackTrace(ex)
-        throw new org.easyb.exception.VerificationException("Expected not to throw $clazz.name but ${ex.getClass().name} was thrown anyway ($ex)")
+        throw new RuntimeException("Expected not to throw $clazz.name but ${ex.getClass().name} was thrown anyway ($ex)")
       }
     }
 
@@ -252,13 +253,13 @@ class TestHelper {
 
   static ensureFileExists(path) throws Exception {
     if (! new File(path as String).exists()) {
-      throw new org.easyb.exception.VerificationException("Expected file \"$path\" to exist, but it does not")
+      throw new RuntimeException("Expected file \"$path\" to exist, but it does not")
     }
   }
 
-  static ensureFloatClose(actual, expected, tolerance) throws org.easyb.exception.VerificationException {
+  static ensureFloatClose(actual, expected, tolerance) throws RuntimeException {
     if (Math.abs(expected-actual) > tolerance) {
-      throw new org.easyb.exception.VerificationException("Expected $actual to be close to $expected (within $tolerance) but the difference is ${expected-actual}")
+      throw new RuntimeException("Expected $actual to be close to $expected (within $tolerance) but the difference is ${expected-actual}")
     }
   }
 
@@ -268,7 +269,7 @@ class TestHelper {
       if (System.currentTimeMillis()-start > timeout) {
         def error = "Timed out while waiting for condition '$name'"
         System.err.println("Timeout ($timeout msec): $error");
-        throw new org.easyb.exception.VerificationException(error)
+        throw new RuntimeException(error)
       }
       sleep(50)
     }
