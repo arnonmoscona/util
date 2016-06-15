@@ -104,9 +104,9 @@ public interface Futures {
     }
 
     /**
-     * Creates a wrapper around the provided {@link CompletionStage} that adds and implementation of {@link Future<T>}
-     * as well as some of the additional method in {@link CompletableFuture<T>} and additional methods in
-     * {@link ExtendedCompletionStage<T>}
+     * Creates a wrapper around the provided {@link CompletionStage} that adds and implementation of Futures
+     * as well as some of the additional method in {@link java.util.concurrent.CompletableFuture} and additional methods in
+     * {@link ExtendedCompletionStage}
      * @param stage the object to "extend" (a.k.a the delegate)
      * @param <T> the type parameter of the delegate
      * @return a new object that delegates everything possible to the delegate and adds functionality that the delegate does not provide

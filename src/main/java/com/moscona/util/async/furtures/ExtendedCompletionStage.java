@@ -64,7 +64,7 @@ public interface ExtendedCompletionStage<T> extends Future<T>, CompletionStage<T
      * Returns true if this ExtendedCompletionStage completed exceptionally, in any way.
      * Possible causes include cancellation, explicit invocation of completeExceptionally,
      * and abrupt termination of a CompletionStage action.
-     * <em><p>Note: relies on the original object having a corresponding method.</p></em>
+     * <p><em>Note: relies on the original object having a corresponding method.</em></p>
      * @return true if this ExtendedCompletionStage completed exceptionally
      * @throws NoSuchMethodException if the original {@link CompletionStage} does not implement a corresponding method
      */
