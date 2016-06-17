@@ -1129,7 +1129,7 @@ public class FuturesTest {
                 new TestingStage<>(Futures.newEagerAsyncCompletableFuture(functionAwaitingSignal("done", signal))));
         soft.assertThat(stage.isDone()).as("should not be completed yet").isFalse();
         signal.countDown();
-        stage.awaitCompletion(1, TimeUnit.SECONDS);
+        stage.awaitCompletion(10, TimeUnit.SECONDS);
         soft.assertThat(stage.isDone()).as("now is completed").isTrue();
         soft.assertAll();
     }
